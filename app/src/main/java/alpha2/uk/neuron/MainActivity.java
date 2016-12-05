@@ -5,17 +5,22 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnBufferingUpdateListener;
 import android.media.MediaPlayer.OnPreparedListener;
 import android.net.Uri;
 
+import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Environment;
+import android.provider.Settings;
 import android.util.Log;
 import android.os.StrictMode;
 import android.hardware.SensorEventListener;
@@ -85,6 +90,8 @@ public class MainActivity extends Activity implements
     private ExitBroadcast mExitBroadcast;
     private SensorManager senSensorManager;
     private Sensor senAccelerometer;
+    private int batterylevel;
+
     private long lastUpdate = 0;
     private float last_x, last_y, last_z;
     private static final int SHAKE_THRESHOLD = 1700;
@@ -141,7 +148,6 @@ public class MainActivity extends Activity implements
     private MediaPlayer player;
 
 
-
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status){
@@ -186,10 +192,10 @@ public class MainActivity extends Activity implements
                     //mOpenCvCameraView.setCameraIndex(98);
                     //mOpenCvCameraView.setCameraIndex(1);
                     //mOpenCvCameraView.enableFpsMeter();
-                    //mOpenCvCameraView.setMaxFrameSize(640,360);
+                    //mOpenCvCameraView.setMaxFrameSize(640,480);
                     mOpenCvCameraView.enableView();
                     headtracking = true;
-                    setDetectorType(1);
+                    setDetectorType(0);
 
                 } break;
                 default:
@@ -273,10 +279,31 @@ public class MainActivity extends Activity implements
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.fd_activity_surface_view);
         mOpenCvCameraView.setCvCameraViewListener(this);
 
+        BatteryManager bm = (BatteryManager)getSystemService(BATTERY_SERVICE);
+        int batLevel = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
+
+        this.registerReceiver(this.batteryInfoReceiver,	new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+
         player = new MediaPlayer();
 
-
     }
+
+    private BroadcastReceiver batteryInfoReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            //int  health= intent.getIntExtra(BatteryManager.EXTRA_HEALTH,0);
+            //int  icon_small= intent.getIntExtra(BatteryManager.EXTRA_ICON_SMALL,0);
+            batterylevel= intent.getIntExtra(BatteryManager.EXTRA_LEVEL,0);
+            //int  plugged= intent.getIntExtra(BatteryManager.EXTRA_PLUGGED,0);
+            //boolean  present= intent.getExtras().getBoolean(BatteryManager.EXTRA_PRESENT);
+            //int  scale= intent.getIntExtra(BatteryManager.EXTRA_SCALE,0);
+            //int  status= intent.getIntExtra(BatteryManager.EXTRA_STATUS,0);
+            //String  technology= intent.getExtras().getString(BatteryManager.EXTRA_TECHNOLOGY);
+            //int  temperature= intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE,0);
+            //int  voltage= intent.getIntExtra(BatteryManager.EXTRA_VOLTAGE,0);
+        }
+    };
 
     public void init() {
 
@@ -576,6 +603,17 @@ public class MainActivity extends Activity implements
                     case "knock knock":
                         mRobot.action_PlayActionName("Shake head");
                         say("somebody is at the door,,,, you best go and answer it. Oh, and your not funny so don't try",false);
+                        break;
+
+                    case "whats your battery level":
+                    case "how much battery do you have left":
+                    case "How much battery have you got left":
+                    case "how much charge do you have":
+                    case "how much battery do you have":
+                    case "battery level":
+                    case "charge left":
+
+                        say("I currently have " + batterylevel + " percent left",false);
                         break;
 
                     case "tell me another joke":
@@ -989,6 +1027,9 @@ public class MainActivity extends Activity implements
         if (facesArray.length > 0) { // location of center of square
             headx = facesArray[0].x + (facesArray[0].width / 2);
             heady = facesArray[0].y + (facesArray[0].height / 2);
+
+            //headx = headx * 2;
+            //heady = heady * 1.5;
 
             short time = 250;
 
