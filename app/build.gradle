@@ -1,0 +1,89 @@
+import org.apache.tools.ant.taskdefs.condition.Os
+import com.android.build.gradle.tasks.NdkCompile
+
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 24
+    buildToolsVersion "25.0.1"
+
+    defaultConfig {
+        applicationId "alpha2.uk.neuron"
+        minSdkVersion 22
+        targetSdkVersion 24
+        versionCode 1
+        versionName "1.0"
+        ndk { moduleName "NativeCode" }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    sourceSets {
+        main {
+            res.srcDirs = ['src/main/res']
+            jniLibs.srcDirs = ['src/main/jniLibs']
+            jni.srcDirs = [] // This prevents the auto generation of Android.mk
+        }
+    }
+/*
+task ndkBuild(type: Exec) {
+    if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+        def ndkDir = getNdkDir()
+        commandLine 'cmd', '/C', "$ndkDir/ndk-build",
+                'NDK_PROJECT_PATH=build',
+                'APP_BUILD_SCRIPT=src/main/jni/Android.mk',
+                'NDK_APPLICATION_MK=src/main/jni/Application.mk',
+                'NDK_APP_LIBS_OUT = src/main/jnilibs'
+
+    } else {
+        //commandLine "ndk-build", '-C', file('src/main').absolutePath
+        def ndkDir = System.getenv("NDKROOT")
+        commandLine "$ndkDir/ndk-build",
+                'NDK_PROJECT_PATH=build',
+                'APP_BUILD_SCRIPT=src/main/jni/Android.mk',
+                'NDK_APPLICATION_MK=src/main/jni/Application.mk',
+                'NDK_APP_LIBS_OUT = src/main/jnilibs'
+    }
+}
+tasks.withType(JavaCompile) {
+    compileTask -> compileTask.dependsOn ndkBuild
+}
+*/
+}
+
+dependencies {
+compile fileTree(include: ['*.jar'], dir: 'libs')
+androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+    exclude group: 'com.android.support', module: 'support-annotations'
+})
+compile 'com.android.support:appcompat-v7:24.2.1'
+testCompile 'junit:junit:4.12'
+compile files('libs/ubtechalpha2robot.jar')
+compile project(':opencv')
+}
+
+def getNdkDir() {
+if (System.env.ANDROID_NDK_ROOT != null)
+    return System.env.ANDROID_NDK_ROOT
+
+Properties properties = new Properties()
+properties.load(project.rootProject.file('local.properties').newDataInputStream())
+def ndkdir = properties.getProperty('ndk.dir', null)
+if (ndkdir == null)
+    throw new GradleException("NDK location not found. Define location with ndk.dir in the local.properties file or with an ANDROID_NDK_ROOT environment variable.")
+
+return ndkdir
+}
+
+def getNdkBuildCmd() {
+def ndkbuild = getNdkDir() + "/ndk-build"
+if (Os.isFamily(Os.FAMILY_WINDOWS))
+    ndkbuild += ".cmd"
+
+return ndkbuild
+}

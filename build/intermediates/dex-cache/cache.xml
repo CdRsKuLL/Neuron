@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<items version="2" >
+
+    <item
+        is-multidex="false"
+        jar="C:\Users\cdrsk\OneDrive\Alpha\Neuron\app\build\intermediates\exploded-aar\com.android.support\support-core-ui\24.2.1\jars\libs\internal_impl-24.2.1.jar"
+        jumboMode="false"
+        optimize="true"
+        revision="25.0.1"
+        sha1="867dad63c33388ff8c7644b236579355036d075f">
+        <dex dex="C:\Users\cdrsk\OneDrive\Alpha\Neuron\app\build\intermediates\pre-dexed\debug\internal_impl-24.2.1_05ac4ec036f2238540623b2e48963b14b71965d9.jar" />
+    </item>
+    <item
+        is-multidex="false"
+        jar="C:\Users\cdrsk\OneDrive\Alpha\Neuron\app\build\intermediates\exploded-aar\com.android.support\animated-vector-drawable\24.2.1\jars\classes.jar"
+        jumboMode="false"
+        optimize="true"
+        revision="25.0.1"
+        sha1="94bc1dfb84dcc8b6f6f8f7cc726d7b2dd39c1574">
+        <dex dex="C:\Users\cdrsk\OneDrive\Alpha\Neuron\app\build\intermediates\pre-dexed\debug\com.android.support-animated-vector-drawable-24.2.1_71949ee48c8500d739420737c555a71019f6fd34.jar" />
+    </item>
+    <item
+        is-multidex="false"
+        jar="C:\Users\cdrsk\OneDrive\Alpha\Neuron\app\build\intermediates\exploded-aar\com.android.support\support-compat\24.2.1\jars\libs\internal_impl-24.2.1.jar"
+        jumboMode="false"
+        optimize="true"
+        revision="25.0.1"
+        sha1="7e4389bd133359a2ff88623ff1e4ff93d6e6f780">
+        <dex dex="C:\Users\cdrsk\OneDrive\Alpha\Neuron\app\build\intermediates\pre-dexed\debug\internal_impl-24.2.1_b762ddf19f65377621bdd78735575494e3f24c85.jar" />
+    </item>
+    <item
+        is-multidex="false"
+        jar="C:\Users\cdrsk\OneDrive\Alpha\Neuron\app\build\intermediates\exploded-aar\com.android.support\support-v4\24.2.1\jars\classes.jar"
+        jumboMode="false"
+        optimize="true"
+        revision="25.0.1"
+        sha1="d7c42c80f6509b9ea4db28ca7859ffae08ec5741">
+        <dex dex="C:\Users\cdrsk\OneDrive\Alpha\Neuron\app\build\intermediates\pre-dexed\debug\com.android.support-support-v4-24.2.1_e5ec4061c692819ab2cbaef3811c1c3446b04045.jar" />
+    </item>
+    <item
+        is-multidex="false"
+        jar="C:\Users\cdrsk\OneDrive\Alpha\Neuron\app\build\intermediates\exploded-aar\com.android.support\support-core-utils\24.2.1\jars\classes.jar"
+        jumboMode="false"
+        optimize="true"
+        revision="25.0.1"
+        sha1="9c4c3bc902450c39ed54de170db4fb12aea20a35">
+        <dex dex="C:\Users\cdrsk\OneDrive\Alpha\Neuron\app\build\intermediates\pre-dexed\debug\com.android.support-support-core-utils-24.2.1_869fbe3382b696afa5f534b7d255928205f0bb73.jar" />
+    </item>
+    <item
+        is-multidex="false"
+        jar="C:\Users\cdrsk\OneDrive\Alpha\Neuron\app\build\intermediates\exploded-aar\com.android.support\support-vector-drawable\24.2.1\jars\classes.jar"
+        jumboMode="false"
+        optimize="true"
+        revision="25.0.1"
+        sha1="d5c731fc64c03dfe04d51134955b483551c35849">
+        <dex dex="C:\Users\cdrsk\OneDrive\Alpha\Neuron\app\build\intermediates\pre-dexed\debug\com.android.support-support-vector-drawable-24.2.1_711c5faf1873a9f81f8d5690f123c5a09e761681.jar" />
+    </item>
+    <item
+        is-multidex="false"
+        jar="C:\Users\cdrsk\OneDrive\Alpha\Neuron\app\build\intermediates\exploded-aar\com.android.support\support-core-utils\24.2.1\jars\libs\internal_impl-24.2.1.jar"
+        jumboMode="false"
+        optimize="true"
+        revision="25.0.1"
+        sha1="935a969265b2a166b2d20415423f5f6e90fe16e0">
+        <dex dex="C:\Users\cdrsk\OneDrive\Alpha\Neuron\app\build\intermediates\pre-dexed\debug\internal_impl-24.2.1_3a0cbfe6e76b784c079a92765625532be8bfacfd.jar" />
+    </item>
+    <item
+        is-multidex="false"
+        jar="C:\Users\cdrsk\OneDrive\Alpha\Neuron\app\build\intermediates\exploded-aar\com.android.support\support-media-compat\24.2.1\jars\classes.jar"
+        jumboMode="false"
+        optimize="true"
+        revision="25.0.1"
+        sha1="09b462bbcb77650284bd6614f1a32f360ef369f8">
+        <dex dex="C:\Users\cdrsk\OneDrive\Alpha\Neuron\app\build\intermediates\pre-dexed\debug\com.android.support-support-media-compat-24.2.1_b68c8fdc9780fd912fd6ca7745ac1ed9dcd1a45d.jar" />
+    </item>
+    <item
+        is-multidex="false"
+        jar="C:\Users\cdrsk\OneDrive\Alpha\Neuron\app\build\intermediates\exploded-aar\com.android.support\appcompat-v7\24.2.1\jars\classes.jar"
+        jumboMode="false"
+        optimize="true"
+        revision="25.0.1"
+        sha1="43b2dba6b5a0b14527961b75329d0b90025f15ea">
+        <dex dex="C:\Users\cdrsk\OneDrive\Alpha\Neuron\app\build\intermediates\pre-dexed\debug\com.android.support-appcompat-v7-24.2.1_e4b276a4fa6a5cb375584de5cb555525af6c31d1.jar" />
+    </item>
+    <item
+        is-multidex="false"
+        jar="C:\Users\cdrsk\OneDrive\Alpha\Neuron\app\build\intermediates\exploded-aar\com.android.support\support-media-compat\24.2.1\jars\libs\internal_impl-24.2.1.jar"
+        jumboMode="false"
+        optimize="true"
+        revision="25.0.1"
+        sha1="fbf8da429efd5ad21e02e3e5ecaa1efc4167878d">
+        <dex dex="C:\Users\cdrsk\OneDrive\Alpha\Neuron\app\build\intermediates\pre-dexed\debug\internal_impl-24.2.1_a5c5a6458fa06281a9810f5b71966a3c6a239971.jar" />
+    </item>
+    <item
+        is-multidex="false"
+        jar="C:\Users\cdrsk\OneDrive\Alpha\Neuron\app\libs\ubtechalpha2robot.jar"
+        jumboMode="false"
+        optimize="true"
+        revision="25.0.1"
+        sha1="563fb017f03c5de53964449a308791665322ec22">
+        <dex dex="C:\Users\cdrsk\OneDrive\Alpha\Neuron\app\build\intermediates\pre-dexed\debug\ubtechalpha2robot_ab8d35cfc101d76ca87b4dea5b00954e2b9feca7.jar" />
+    </item>
+    <item
+        is-multidex="false"
+        jar="C:\Users\cdrsk\OneDrive\Alpha\Neuron\app\build\intermediates\exploded-aar\com.android.support\support-compat\24.2.1\jars\classes.jar"
+        jumboMode="false"
+        optimize="true"
+        revision="25.0.1"
+        sha1="0ecb4b595fa0f0f8018a149ace3ea6525624f94e">
+        <dex dex="C:\Users\cdrsk\OneDrive\Alpha\Neuron\app\build\intermediates\pre-dexed\debug\com.android.support-support-compat-24.2.1_e2daa70f81e72564a1bdb1de049d5050ec199e33.jar" />
+    </item>
+    <item
+        is-multidex="false"
+        jar="C:\Users\cdrsk\OneDrive\Alpha\Neuron\app\build\intermediates\exploded-aar\com.android.support\support-fragment\24.2.1\jars\classes.jar"
+        jumboMode="false"
+        optimize="true"
+        revision="25.0.1"
+        sha1="b9a1ac78ad7ef3abedc4a4b30cd92bcacb939d1f">
+        <dex dex="C:\Users\cdrsk\OneDrive\Alpha\Neuron\app\build\intermediates\pre-dexed\debug\com.android.support-support-fragment-24.2.1_781f1e63742b7d10f44d2a39704ee8822c8dc2bf.jar" />
+    </item>
+    <item
+        is-multidex="false"
+        jar="C:\Users\cdrsk\OneDrive\Alpha\Neuron\app\build\intermediates\exploded-aar\Neuron\opencv\unspecified\jars\classes.jar"
+        jumboMode="false"
+        optimize="true"
+        revision="25.0.1"
+        sha1="869fc937461bfc6a6f70175eb1ec1901f853301c">
+        <dex dex="C:\Users\cdrsk\OneDrive\Alpha\Neuron\app\build\intermediates\pre-dexed\debug\Neuron-opencv-unspecified_e9da32c216229ade64a513c2308b9843ef00e56e.jar" />
+    </item>
+    <item
+        is-multidex="false"
+        jar="C:\Users\cdrsk\AppData\Local\Android\sdk\extras\android\m2repository\com\android\support\support-annotations\24.2.1\support-annotations-24.2.1.jar"
+        jumboMode="false"
+        optimize="true"
+        revision="25.0.1"
+        sha1="8de3aafecbdf98a61db6427f008f2d515bcd2544">
+        <dex dex="C:\Users\cdrsk\OneDrive\Alpha\Neuron\app\build\intermediates\pre-dexed\debug\support-annotations-24.2.1_271abf2894164a390b3ef203ba1c597245df9e1d.jar" />
+    </item>
+    <item
+        is-multidex="false"
+        jar="C:\Users\cdrsk\OneDrive\Alpha\Neuron\app\build\intermediates\exploded-aar\com.android.support\support-core-ui\24.2.1\jars\classes.jar"
+        jumboMode="false"
+        optimize="true"
+        revision="25.0.1"
+        sha1="e7f3132168957eefc46229fc32c3bd464642b71e">
+        <dex dex="C:\Users\cdrsk\OneDrive\Alpha\Neuron\app\build\intermediates\pre-dexed\debug\com.android.support-support-core-ui-24.2.1_ed741096d41407432ef07f422f091229c9ce99cb.jar" />
+    </item>
+    <item
+        is-multidex="false"
+        jar="C:\Users\cdrsk\OneDrive\Alpha\Neuron\app\build\intermediates\exploded-aar\com.android.support\support-fragment\24.2.1\jars\libs\internal_impl-24.2.1.jar"
+        jumboMode="false"
+        optimize="true"
+        revision="25.0.1"
+        sha1="5f64d657e838e8375135c0f6057a7ff8fab6a50e">
+        <dex dex="C:\Users\cdrsk\OneDrive\Alpha\Neuron\app\build\intermediates\pre-dexed\debug\internal_impl-24.2.1_4d700ed9bbb1e4d11081691c3b78090179e18901.jar" />
+    </item>
+
+</items>

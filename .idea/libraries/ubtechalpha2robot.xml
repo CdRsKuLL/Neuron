@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="ubtechalpha2robot">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/app/libs/ubtechalpha2robot.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
