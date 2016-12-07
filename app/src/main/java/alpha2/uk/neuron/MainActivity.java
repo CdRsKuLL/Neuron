@@ -50,11 +50,22 @@ import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.objdetect.CascadeClassifier;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.SocketException;
+import java.util.Enumeration;
 
 
 import com.ubtechinc.alpha2ctrlapp.network.action.ClientAuthorizeListener;
@@ -74,6 +85,9 @@ import com.ubtechinc.contant.StaticValue;
 import com.ubtechinc.developer.DeveloperAppStaticValue;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -84,7 +98,7 @@ import java.util.Date;
 
 public class MainActivity extends Activity implements
         CvCameraViewListener2, SensorEventListener, IAlpha2RobotClientListener, Alpha2SpeechMainServiceUtil.ISpeechInitInterface,
-        IAlpha2RobotTextUnderstandListener, IAlpha2SpeechGrammarInitListener , IAlpha2ActionListListener , AlphaActionClientListener  {
+        IAlpha2RobotTextUnderstandListener, IAlpha2SpeechGrammarInitListener , IAlpha2ActionListListener , AlphaActionClientListener {
 
     private Alpha2RobotApi mRobot;
     private ExitBroadcast mExitBroadcast;
@@ -100,8 +114,20 @@ public class MainActivity extends Activity implements
     public long alphapositioncount = 0;
     public Boolean alphapositionsay = false;
     public boolean speaking = false;
-    private boolean isOneAngle=true;
+    private boolean isOneAngle = true;
     public String lastcommand = "";
+    public String Latitude = "";
+    public String Longitude = "";
+    public String City = "";
+    public String tempC = "";
+    public String tempF = "0";
+    public String weatherCondition = "";
+    public String weatherChanceofrain = "";
+    public String weatherChanceofsnow = "";
+    public String weatherChanceofthinder = "";
+    String message = "";
+    String text = "";
+    public boolean isbusy = false;
 
     private ArrayList<String> mAlphaActionList = new ArrayList<String>();
     private ArrayList<String> mAlphaDanceList = new ArrayList<String>();
@@ -111,53 +137,53 @@ public class MainActivity extends Activity implements
     HttpURLConnection conn;
     private String mPackageName;
 
-    private static final String TAG                     = "Main::Activity";
-    private static final Scalar    FACE_RECT_COLOR         = new Scalar(0, 255, 0, 255);
-    public static final int        JAVA_DETECTOR           = 0;
-    public static final int        NATIVE_DETECTOR         = 1;
+    private static final String TAG = "Main::Activity";
+    private static final Scalar FACE_RECT_COLOR = new Scalar(0, 255, 0, 255);
+    public static final int JAVA_DETECTOR = 0;
+    public static final int NATIVE_DETECTOR = 1;
 
     private MenuItem mItemType;
 
-    private Mat                    mRgba;
-    private Mat                    mGray;
+    private Mat mRgba;
+    private Mat mGray;
     private File mCascadeFile;
-    private CascadeClassifier      mJavaDetector;
-    private DetectionBasedTracker  mNativeDetector;
+    private CascadeClassifier mJavaDetector;
+    private DetectionBasedTracker mNativeDetector;
 
-    private int                    mDetectorType           = JAVA_DETECTOR;
-    private String[]               mDetectorName;
+    private int mDetectorType = JAVA_DETECTOR;
+    private String[] mDetectorName;
 
-    private float                  mRelativeFaceSize       = 0.2f;
-    private int                    mAbsoluteFaceSize       = 0;
+    private float mRelativeFaceSize = 0.2f;
+    private int mAbsoluteFaceSize = 0;
 
-    public double                  headx                    =115;
-    public double                  heady                    =120;
-    public double                  headxlast                =115;
-    public double                  headylast                =120;
-    public boolean                 headtracking             =false;
-    public boolean                 fallenover               =false;
+    public double headx = 115;
+    public double heady = 120;
+    public double headxlast = 115;
+    public double headylast = 120;
+    public boolean headtracking = false;
+    public boolean fallenover = false;
 
-    public boolean                 bored                   =false;
-    public int                     boredcounter            =0;
+    public boolean bored = false;
+    public int boredcounter = 0;
 
-    private CameraBridgeViewBase   mOpenCvCameraView;
+    private CameraBridgeViewBase mOpenCvCameraView;
+    private ServerSocket serverSocket;
 
     //Some UI items
-    public TextView textView                = null;
+    public TextView textView = null;
 
     private MediaPlayer player;
 
 
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
-        public void onManagerConnected(int status){
-            switch(status){
-                case LoaderCallbackInterface.SUCCESS:
-                {
+        public void onManagerConnected(int status) {
+            switch (status) {
+                case LoaderCallbackInterface.SUCCESS: {
                     Log.i(TAG, "OpenCV Loaded Successfully");
                     System.loadLibrary("detection_based_tracker");
 
-                    try{
+                    try {
                         // load cascade file from application resources
                         InputStream is = getResources().openRawResource(R.raw.lbpcascade_frontalface);
                         File cascadeDir = getDir("cascade", Context.MODE_PRIVATE);
@@ -182,7 +208,7 @@ public class MainActivity extends Activity implements
                         mNativeDetector = new DetectionBasedTracker(mCascadeFile.getAbsolutePath(), 0);
 
                         cascadeDir.delete();
-                    }catch(IOException e){
+                    } catch (IOException e) {
                         e.printStackTrace();
                         Log.i(TAG, "Failed to load cascade. Exception thrown: " + e);
                     }
@@ -192,29 +218,30 @@ public class MainActivity extends Activity implements
                     //mOpenCvCameraView.setCameraIndex(98);
                     //mOpenCvCameraView.setCameraIndex(1);
                     //mOpenCvCameraView.enableFpsMeter();
-                    //mOpenCvCameraView.setMaxFrameSize(640,480);
+                    //mOpenCvCameraView.setMaxFrameSize(320,240);
                     mOpenCvCameraView.enableView();
                     headtracking = true;
                     setDetectorType(0);
 
-                } break;
-                default:
-                {
+                }
+                break;
+                default: {
                     super.onManagerConnected(status);
-                }break;
+                }
+                break;
             }//switch
         }//onManagerConnected
     };//BaseLoaderCallback
 
     private void initActionList(ArrayList<ArrayList<String>> list) {
-        if(list != null) {
+        if (list != null) {
             for (ArrayList<String> item : list) {
                 if (item.get(1) != null && item.get(2) != null) {
-                    if("1".equals(item.get(1))) {
+                    if ("1".equals(item.get(1))) {
                         mAlphaActionList.add(item.get(2));
-                    } else if("2".equals(item.get(1))) {
+                    } else if ("2".equals(item.get(1))) {
                         mAlphaDanceList.add(item.get(2));
-                    } else if("3".equals(item.get(1))) {
+                    } else if ("3".equals(item.get(1))) {
                         mAlphaStoryList.add(item.get(2));
                     }
                 }
@@ -223,7 +250,7 @@ public class MainActivity extends Activity implements
 
     }
 
-    public MainActivity(){
+    public MainActivity() {
         mDetectorName = new String[2];
         mDetectorName[JAVA_DETECTOR] = "JAVA";
         mDetectorName[NATIVE_DETECTOR] = "NATIVE (tracking)";
@@ -269,7 +296,7 @@ public class MainActivity extends Activity implements
         StrictMode.setThreadPolicy(policy);
         senSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         senAccelerometer = senSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        senSensorManager.registerListener(this, senAccelerometer , SensorManager.SENSOR_DELAY_NORMAL);
+        senSensorManager.registerListener(this, senAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
         Context context = getApplicationContext();
         init();
 
@@ -279,12 +306,15 @@ public class MainActivity extends Activity implements
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.fd_activity_surface_view);
         mOpenCvCameraView.setCvCameraViewListener(this);
 
-        BatteryManager bm = (BatteryManager)getSystemService(BATTERY_SERVICE);
+        BatteryManager bm = (BatteryManager) getSystemService(BATTERY_SERVICE);
         int batLevel = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
 
-        this.registerReceiver(this.batteryInfoReceiver,	new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        this.registerReceiver(this.batteryInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
 
         player = new MediaPlayer();
+
+        Thread socketServerThread = new Thread(new SocketServerThread());
+        socketServerThread.start();
 
     }
 
@@ -294,7 +324,7 @@ public class MainActivity extends Activity implements
 
             //int  health= intent.getIntExtra(BatteryManager.EXTRA_HEALTH,0);
             //int  icon_small= intent.getIntExtra(BatteryManager.EXTRA_ICON_SMALL,0);
-            batterylevel= intent.getIntExtra(BatteryManager.EXTRA_LEVEL,0);
+            batterylevel = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0);
             //int  plugged= intent.getIntExtra(BatteryManager.EXTRA_PLUGGED,0);
             //boolean  present= intent.getExtras().getBoolean(BatteryManager.EXTRA_PRESENT);
             //int  scale= intent.getIntExtra(BatteryManager.EXTRA_SCALE,0);
@@ -332,7 +362,7 @@ public class MainActivity extends Activity implements
                         // TODO Auto-generated method stub
                         Log.i("zdy", "code = " + code + " info= " + info);
 
-                        mRobot.initSpeechApi(MainActivity.this,MainActivity.this);
+                        mRobot.initSpeechApi(MainActivity.this, MainActivity.this);
                         mRobot.initActionApi(MainActivity.this);
                         mRobot.initChestSeiralApi();
 
@@ -350,12 +380,12 @@ public class MainActivity extends Activity implements
         Log.i("zdy", "Recognized initover");
         Calendar c = Calendar.getInstance();
         int currenthour = c.get(Calendar.HOUR_OF_DAY);
-        if (currenthour < 12){
-            say("good morning, powering up",false);
-        } else if (currenthour < 17){
-           say("good afternoon, powering up",false);
+        if (currenthour < 12) {
+            say("good morning, powering up", false);
+        } else if (currenthour < 17) {
+            say("good afternoon, powering up", false);
         } else {
-            say("good evening, powering up",false);
+            say("good evening, powering up", false);
         }
         CopyAssets();
 
@@ -365,321 +395,475 @@ public class MainActivity extends Activity implements
 
         @Override
         public void handleMessage(Message msg) {
-            // TODO Auto-generated method stub
             super.handleMessage(msg);
-            String nlutext = "";
-            String text = (String) msg.obj;
-            text = text.toLowerCase();
-            bored = false;
-            if (text.contains("nlu_result:")){
-            String[] findtext = text.split(":");
-                for (int x = 0; x < findtext.length; x++)
-                {
-                    if (findtext[x].contains("literal")){
-                        if (findtext[x+1].length() > 3) {
-                            if (findtext[x+1].contains("ext_map_time")){
+            command((String) msg.obj);
+        }
+    };
 
-                            } else {
-                                nlutext = findtext[x + 1].replaceAll(",", "");
-                                nlutext = nlutext.replaceAll("\n", "");
-                                nlutext = nlutext.replaceAll("action", "");
-                                nlutext = nlutext.trim();
-                                text = "";
+
+    public void command(String msg) {
+
+        msg = msg.toLowerCase();
+        msg = msg + "@@";
+        String nlutext = "";
+        String[] mess = msg.split(("@@"));
+        String newcom = "";
+        text = mess[0];
+
+        if (text.contains("nlu_result:")) {
+            text = "";
+            String[] findtext = text.split(":");
+            for (int x = 0; x < findtext.length; x++) {
+                if (findtext[x].contains("literal")) {
+                    if (findtext[x + 1].length() > 3) {
+                        if (findtext[x + 1].contains("ext_map_time")) {
+
+                        } else {
+                            nlutext = findtext[x + 1].replaceAll(",", "");
+                            nlutext = nlutext.replaceAll("\n", "");
+                            nlutext = nlutext.replaceAll("action", "");
+                            if (text.equals("")) {
+                                text = nlutext.trim();
                             }
                         }
                     }
                 }
             }
+        }
 
-            if (text.contains("action_performance")){
-                mRobot.action_PlayActionName("Happy");
-                int number = new Random().nextInt(10);
-                String actionName = String.format("ACT%d", number);
-                // mRobot.action_PlayActionName(actionName);
-            } else {
-                // Speech part
 
-                if (text.contains(("tracking"))){
-                    if (text.contains("off")){
-                        say("Turning head tracking off",true);
+        if (lastcommand.equals(text)) {
+            text = "";
+        }
 
-                        if(mOpenCvCameraView != null)
-                            mOpenCvCameraView.disableView();
-                        headtracking = false;
+        lastcommand = text; //so no repeats
 
-                    }
-                    if (text.contains("on")){
-                        say("Turning head tracking on",true);
-                        if(!OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_11, MainActivity.this, mLoaderCallback)){
-                            headtracking = true;
-                        }
-                    }
+        text = text.replaceAll("'", "");
+
+        if (text.contains("action_performance")) {
+            mRobot.action_PlayActionName("Happy");
+            int number = new Random().nextInt(10);
+            String actionName = String.format("ACT%d", number);
+            // mRobot.action_PlayActionName(actionName);
+        }
+
+        if (text.contains(("tracking"))) {
+            if (text.contains("off")) {
+                say("Turning head tracking off", true);
+
+                if (mOpenCvCameraView != null)
+                    mOpenCvCameraView.disableView();
+                headtracking = false;
+
+            }
+
+            if (text.contains("on")) {
+                say("Turning head tracking on", true);
+                if (!OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_11, MainActivity.this, mLoaderCallback)) {
+                    headtracking = true;
+                }
+            }
+        }
+
+
+        if (text.contains("light") || text.contains("lights")) {
+            if (text.contains("off")) {
+                mRobot.action_PlayActionName("Raise head");
+                try {
+                    url = new URL("http://192.168.1.239:1001/light1off");
+
+                    conn = (HttpURLConnection) url.openConnection();
+                    conn.setInstanceFollowRedirects(true);
+                    conn.connect();
+                    conn.getResponseCode();
+                    say("okay, turning the lights off", false);
+                } catch (IOException e) {
+                    say("sorry, I can not turn the lights off at the moment. There is a communication error it seems.", false);
                 }
 
-                if (text.contains("light") || text.contains("lights")){
-                    if (text.contains("off")){
-                        mRobot.action_PlayActionName("Raise head");
-                        try {
-                            url = new URL("http://192.168.1.239:1001/light1off");
-
-                            conn = (HttpURLConnection) url.openConnection();
-                            conn.setInstanceFollowRedirects(true);
-                            conn.connect();
-                            conn.getResponseCode();
-                            say("okay, turning the lights off",false);
-                        } catch (IOException e){
-                            say("sorry, I can not turn the lights off at the moment. There is a communication error it seems.",false);
-                        }
-//set the output to true, indicating you are outputting(uploading) POST data
-                        conn.disconnect();
-                    }
-                    if (text.contains("on")){
-                        mRobot.action_PlayActionName("Raise head");
-                        try {
-                            url = new URL("http://192.168.1.239:1001/light1on");
-                            conn = (HttpURLConnection) url.openConnection();
-                            conn.setInstanceFollowRedirects(true);
-                            conn.connect();
-                            conn.getResponseCode();
-                            say("okay, turning the light on",false);
-                        } catch (IOException e){
-                            say("sorry, I can not turn the light on at the moment. There is a communication error it seems.",false);
-                        }
-//set the output to true, indicating you are outputting(uploading) POST data
-
-                        conn.disconnect();
-                    }
+                conn.disconnect();
+            }
+            if (text.contains("on")) {
+                mRobot.action_PlayActionName("Raise head");
+                try {
+                    url = new URL("http://192.168.1.239:1001/light1on");
+                    conn = (HttpURLConnection) url.openConnection();
+                    conn.setInstanceFollowRedirects(true);
+                    conn.connect();
+                    conn.getResponseCode();
+                    say("okay, turning the light on", false);
+                } catch (IOException e) {
+                    say("sorry, I can not turn the light on at the moment. There is a communication error it seems.", false);
                 }
 
-                Calendar c = Calendar.getInstance();
-                Date date = new Date();
+                conn.disconnect();
+            }
+        }
 
-                if (text.equals("")){text = nlutext;}
-                if (lastcommand.equals(text)){text = "";}
-                lastcommand = text;
+        if (text.contains("joke") || text.contains("jokes")) {
+            if (text.contains("another") || text.contains("more")) {
+                say("okay, another joke coming up.", true);
+            }
+            int joke = new Random().nextInt(13);
+            switch (joke) {
+                case 0:
+                    say("How do astronomers organize a party?                 They planet.", false);
+                    break;
+                case 1:
+                    say("What type of sandals do frogs wear?                 Open-toad!", false);
+                    break;
+                case 2:
+                    say("Where do bees go to the toilet?                 at the BP station.", false);
+                    break;
+                case 3:
+                    say("What do you call a paralyzed goat?                 Billy Idle.", false);
+                    break;
+                case 4:
+                    say("I have a phobia of over engineered buildings. I have a complex complex complex.", false);
+                    break;
+                case 5:
+                    say("How do you make a tissue dance?                 Put a little boogie in it.", false);
+                    break;
+                case 6:
+                    say("Why did A dell cross the road?                      To sing    Hello from the other side.", true);
+                    break;
+                case 7:
+                    say("Why couldn't the leopard play hide and seek?                Because he was always spotted.", false);
+                    break;
+                case 8:
+                    say("A robot walks into a bar, orders a drink, and lays down some cash.                 Bartender says, Hey, we don't serve robots. And the robot says, Oh, but someday you will..", false);
+                    break;
+                case 9:
+                    say("How many robots does it take to screw in a light bulb?                 Three,,, one to hold the bulb, and two to turn the ladder!.", false);
+                    break;
+                case 10:
+                    say("How does a robot shave ?                 With a laser blade !", false);
+                    break;
+                case 11:
+                    say("What do you call a robot that always takes the longest route round ?                 R 2 detour.", false);
+                    break;
+                case 12:
+                    say("Do robots have sisters ?                 No, just transistors.", false);
+                    break;
 
-                switch (text) {
-                    case "play radio":
-                    case "play the radio":
-                        say("I'll play the radio for you, please wait",true);
-                    case "radio one":
-                    case "play radio one":
-                    case "play radio wall":
-                        say ("playing radio one",true);
-                        initializeMediaPlayer("http://bbcmedia.ic.llnwd.net/stream/bbcmedia_radio1_mf_p");
-                        break;
-                    case "play radio two":
-                    case "radio two":
-                        say ("playing radio two",true);
-                        initializeMediaPlayer("http://bbcmedia.ic.llnwd.net/stream/bbcmedia_radio2_mf_p");
-                        break;
-                    case "play radio classical":
-                    case "radio classical":
-                        say ("playing radio classical",true);
-                        initializeMediaPlayer("http://media-the.musicradio.com:80/ClassicFMMP3");
-                        break;
-                    case "play radio key 103":
-                    case "play radio k103":
-                    case "play key 103":
-                    case "play k103":
-                    case "key 103":
-                    case "k103":
-                        say ("playing key 1 o 3",true);
-                        initializeMediaPlayer("http://icy-e-bl-07-boh.sharp-stream.com:8000/key.mp3");
-                        break;
-                    case "play radio x":
-                    case "radio x":
-                        say ("playing radio x",true);
-                        initializeMediaPlayer("http://media-the.musicradio.com:80/RadioXManchester");
-                        break;
-                    case "turn the radio off":
-                    case "radio off":
-                    case "radio stop":
-                    case "please turn the radio off":
-                    case "stop the radio":
-                    case "sound off":
-                    case "alpha be quiet":
-                    case "shut up":
-                    case "be quiet":
-                    case "stop":
-                        if (player.isPlaying()) {
-                            say("turning the radio off",true);
-                            player.stop();
-                        } else {
-                            say("sorry, the radio isn't playing",true);
-                        }
+            }
+        }
 
-                        break;
-                    case "dance for me":
-                        say("dance, dance",true);
-                        break;
-                    case "can you see me":
-                    case "turn tracking on":
-                        say("Turning head tracking on",true);
-                        if(!OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_11, MainActivity.this, mLoaderCallback)){}
-                        headtracking = true;
-                        break;
+        if (text.contains("thank") || text.contains("thanks")) {
+            int number = new Random().nextInt(4);
+            if (number == 0) {
+                say("You are welcome", false);
+            }
+            if (number == 1) {
+                say("I should think so too", false);
+            }
+            if (number == 2) {
+                say("no,, thank you", false);
+            }
+            if (number == 3) {
+                say("super duper, no problem", false);
+            }
+        }
 
-                    case "close your eyes":
-                    case "turn tracking off":
-                        say("Turning head tracking off",true);
-                        mRobot.action_PlayActionName("eyesblack");
-                        if(mOpenCvCameraView != null)mOpenCvCameraView.disableView();
-                        headtracking = false;
-                        break;
+        if (text.contains("weather")) {
+            Latitude = "";
+            Latitude = "";
 
-                    case "how are you doing":
-                    case "how are you":
-                    case "how are you feeling":
-                        say("I'm very well thank you.",false);
-                        break;
-
-                    case "whats your name":
-                    case "what are you called":
-                    case "what shall I call you":
-                        say("My name is Alpha, I'm currently running version 1 of Neuron. You can see this application at website alpha 2 dot uk",true );
-
-                    case "thank you":
-                    case "okay thank you":
-                    case "thanks":
-                    case "okay thanks":
-                        int number = new Random().nextInt(4);
-                        if (number == 0){ say("You are welcome",false);}
-                        if (number == 1){ say("I should think so too",false);}
-                        if (number == 2){ say("no,, thank you",false);}
-                        if (number == 3){ say("super duper, no problem",false);}
-                        break;
-
-                    case "what time is it":
-                    case "whats the time":
-                        int currenthour = c.get(Calendar.HOUR_OF_DAY);
-                        int currentminute = c.get(Calendar.MINUTE);
-                        if (currentminute < 10) {
-                            say("The current time is " + currenthour + " " + "o" + currentminute, false);
-                        } else {
-                            say("The current time is " + currenthour + " " +  currentminute, false);
-                        }
-                        break;
-
-                    case "what day is it":
-                    case "whats the day":
-                        say("Today is a " + android.text.format.DateFormat.format("EEEE, MMMM d", date), false);
-                        break;
-
-                    case "what year is it":
-                    case "whats the year":
-                        say("The year is  " + android.text.format.DateFormat.format("yyyy", date), false);
-                        break;
-
-                    case "what month is it":
-                    case "whats the month":
-                    case "what month are we in":
-                    case "what month is this":
-                        say("The month is  " + android.text.format.DateFormat.format("MMMM", date), false);
-                        break;
-
-                    case "what date is it":
-                    case "what date is it today":
-                    case "what date is this":
-                    case "whats the date":
-                    case "whats the date today":
-                    case "whats todays date":
-                        int currentdate = c.get(Calendar.DATE);
-                        say("Today's date is " + android.text.format.DateFormat.format("EEEE, MMMM d, yyyy", date), false);
-                        break;
-
-                    case "how old are you":
-                    case "when were you born":
-                    case "whats your birthday":
-                    case "whens your birthday":
-                    case "what date is your birthday on":
-                        say("I was first born on Indiegogo on the 31st December 2015. But I don't really age.", false );
-                        break;
-
-                    case "see you later alligator":
-                        say("in a while crocodile",false);
-                        break;
-
-                    case "knock knock":
-                        mRobot.action_PlayActionName("Shake head");
-                        say("somebody is at the door,,,, you best go and answer it. Oh, and your not funny so don't try",false);
-                        break;
-
-                    case "whats your battery level":
-                    case "how much battery do you have left":
-                    case "How much battery have you got left":
-                    case "how much charge do you have":
-                    case "how much battery do you have":
-                    case "battery level":
-                    case "charge left":
-
-                        say("I currently have " + batterylevel + " percent left",false);
-                        break;
-
-                    case "tell me another joke":
-                        say("okay, another joke coming up.",true);
-                    case "tell me a joke":
-                    case "make me laugh":
-                    case "do you know any jokes":
-                    case "can you tell me a joke":
-                    case "know any jokes":
-                    case "tell me a good one":
-
-                        int joke = new Random().nextInt(13);
-                        switch (joke){
-                            case 0:
-                                say("How do astronomers organize a party?                 They planet.",false);
-                                break;
-                            case 1:
-                                say("What type of sandals do frogs wear?                 Open-toad!",false);
-                                break;
-                            case 2:
-                                say("Where do bees go to the toilet?                 at the BP station.",false);
-                                break;
-                            case 3:
-                                say("What do you call a paralyzed goat?                 Billy Idle.",false);
-                                break;
-                            case 4:
-                                say("I have a phobia of over engineered buildings. I have a complex complex complex.",false);
-                                break;
-                            case 5:
-                                say("How do you make a tissue dance?                 Put a little boogie in it.",false);
-                                break;
-                            case 6:
-                                say("Why did Adell cross the road?                      To sing    Hello from the other side.",true);
-                                break;
-                            case 7:
-                                say("Why couldn't the leopard play hide and seek?                Because he was always spotted.",false);
-                                break;
-                            case 8:
-                                say("A robot walks into a bar, orders a drink, and lays down some cash.                 Bartender says, Hey, we don't serve robots. And the robot says, Oh, but someday you will..",false);
-                                break;
-                            case 9:
-                                say("How many robots does it take to screw in a light bulb?                 Three,,, one to hold the bulb, and two to turn the ladder!.",false);
-                                break;
-                            case 10:
-                                say("How does a robot shave ?                 With a laser blade !",false);
-                                break;
-                            case 11:
-                                say("What do you call a robot that always takes the longest route round ?                 R 2 detour.",false);
-                                break;
-                            case 12:
-                                say("Do robots have sisters ?                 No, just transistors.",false);
-                                break;
-
-                        }
-                        break;
-
-                    default:
-                       //say("I'm sorry, I didn't quite catch that?",false);
-                        break;
+            String Currentcondition = "";
+            String getlocation = getUrl("http://freegeoip.net/json").replace("\"", "");
+            String[] loc = getlocation.split(",");
+            for (int x = 0; x < loc.length; x++) {
+                if (loc[x].contains("latitude")) {
+                    Latitude = loc[x].substring(loc[x].lastIndexOf(":") + 1);
+                }
+                if (loc[x].contains("longitude")) {
+                    Longitude = loc[x].substring(loc[x].lastIndexOf(":") + 1);
+                }
+                if (loc[x].contains("city")) {
+                    City = loc[x].substring(loc[x].lastIndexOf(":") + 1);
+                }
+            }  //28064815bbbd7c158a58330087a9d152
+            String getWeather = getUrl("http://api.openweathermap.org/data/2.5/weather?lat=" + Latitude + "&lon=" + Longitude + "&units=metric&APPID=28064815bbbd7c158a58330087a9d152");
+            getWeather = getWeather.replace("{","");
+            getWeather = getWeather.replace("}","");
+            String[] wea = getWeather.split(",");
+            for (int x = 0; x < wea.length; x++) {
+                if (wea[x].contains("temp")) {
+                    tempC = wea[x].substring(wea[x].lastIndexOf(":") + 1);
+                }
+                if (wea[x].contains("description")) {
+                    Currentcondition = wea[x].substring(wea[x].lastIndexOf(":") + 1);
                 }
 
             }
-            lastcommand = text;
+            say("Today in " + City + " it is currently " + tempC + " degrees celsius with" + Currentcondition,true);
         }
 
-    };
+        if (text.contains("drive")||text.contains("long")||text.contains("to get to")) {
+            String disthours = "0";
+            String distmiles = "0";
+            String startfrom = "";
+            String getDistance = "";
+            String dest = text.substring(text.lastIndexOf(" to ")+3);
+            City = "";
+            if (dest.contains("from")){
+                String [] splitdest = dest.split("from");
+                dest = splitdest[0];
+            }
+            dest = dest.trim();
+            if (!text.contains(("from"))) {
+
+                String getlocation = getUrl("http://freegeoip.net/json").replace("\"", "");
+                String[] loc = getlocation.split(",");
+
+                for (int x = 0; x < loc.length; x++) {
+                    if (loc[x].contains("latitude")) {
+                        Latitude = loc[x].substring(loc[x].lastIndexOf(":") + 1);
+                    }
+                    if (loc[x].contains("longitude")) {
+                        Longitude = loc[x].substring(loc[x].lastIndexOf(":") + 1);
+                    }
+                    if (loc[x].contains("city")) {
+                        City = loc[x].substring(loc[x].lastIndexOf(":") + 1);
+                    }
+                }
+                startfrom = Latitude + "," + Longitude;
+            } else {
+                String [] sf = text.split("from");
+                if (sf[0].contains("to")){
+                    String [] sf1 = sf[1].split("to");
+                    startfrom = sf1[0].trim();
+                } else {
+                    startfrom = sf[1].trim();
+                }
+
+            }
+
+            startfrom = startfrom.replace(" ","%20");
+            dest = dest.replace(" ","%20");
+            getDistance = getUrl("http://maps.google.com/maps/api/directions/json?origin=" + startfrom + "&destination=" + dest + "&units=imperial&sensor=false");
+            String [] arr = getDistance.split("Map data");
+            String [] place = arr[arr.length -1].split("\"");
+            disthours = place[16];
+            distmiles = place[8];
+            if (!City.equals("")){startfrom = City;}
+
+            say("The distance from " + startfrom + " to " + dest + " is " + distmiles + " and it would take around " + disthours, true);
+        }
+
+        if (text.contains("radio")) {
+            if (text.contains("one") || text.contains("wall")) {
+                say("playing radio one", false);
+                initializeMediaPlayer("http://bbcmedia.ic.llnwd.net/stream/bbcmedia_radio1_mf_p");
+            }
+            if (text.contains("two")) {
+                say("playing radio two", false);
+                initializeMediaPlayer("http://bbcmedia.ic.llnwd.net/stream/bbcmedia_radio2_mf_p");
+            }
+            if (text.contains("classical")) {
+                say("playing radio classical", false);
+                initializeMediaPlayer("http://media-the.musicradio.com:80/ClassicFMMP3");
+            }
+            if (text.contains("103")) {
+                say("playing key 1 o 3", false);
+                initializeMediaPlayer("http://icy-e-bl-07-boh.sharp-stream.com:8000/key.mp3");
+            }
+            if (text.contains(" x")) {
+                say("playing radio x", false);
+                initializeMediaPlayer("http://media-the.musicradio.com:80/RadioXManchester");
+            }
+            if (text.contains("off") || text.contains("stop") || text.contains("quiet")) {
+                if (player.isPlaying()) {
+                    say("turning the radio off", false);
+                    player.stop();
+                } else {
+                    say("sorry, the radio isn't playing", true);
+                }
+            }
+        }
+
+        if (text.contains("music")) {
+            if (text.contains("like") || text.contains("love") || text.contains("enjoy") || text.contains("taste") || text.contains("hate")) {
+                say("I like all sorts of music, but I really enjoy trance", true);
+            }
+            if (text.contains("christmas")) {
+                say("playing some christmas music", true);
+                initializeMediaPlayer("http://uk5.internet-radio.com:8278/live");
+            }
+            if (text.contains("dance")) {
+                say("playing some dance music", true);
+                initializeMediaPlayer("http://stream.nonstopplay.co.uk/nsp-128k-mp3");
+            }
+            if (text.contains("classical")) {
+                say("playing some classical music", true);
+                initializeMediaPlayer("http://109.123.116.202:8020/stream");
+            }
+            if (text.contains("rnb") || text.contains("hip-hop")) {
+                say("playing some rnb and hip hop music", true);
+                initializeMediaPlayer("http://uk4.internet-radio.com:10104/live");
+            }
+            if (text.contains("jazz")) {
+                say("playing some jazz music....... nice", true);
+                initializeMediaPlayer("http://tx.sharp-stream.com/icecast.php?i=jazzfmmobile.mp3");
+            }
+            if (text.contains("off") || text.contains("stop") || text.contains("quiet")) {
+                if (player.isPlaying()) {
+                    say("turning the music off", false);
+                    player.stop();
+                } else {
+                    say("sorry, I'm not playing any music", true);
+                }
+            }
+        }
+
+        Calendar c = Calendar.getInstance();
+        Date date = new Date();
+
+        switch (text) {
+            case "can you play some music":
+            case "can you play the radio":
+            case "play some music":
+            case "play the radio":
+            case "play some radio":
+                command("play radio one");
+                break;
+            case "dance for me":
+                say("dance, dance", true);
+                break;
+            case "can you see me":
+                say("Turning head tracking on", true);
+                if (!OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_11, MainActivity.this, mLoaderCallback)) {
+                }
+                headtracking = true;
+                break;
+
+            case "close your eyes":
+                say("Turning head tracking off", true);
+                mRobot.action_PlayActionName("eyesblack");
+                if (mOpenCvCameraView != null) mOpenCvCameraView.disableView();
+                headtracking = false;
+                break;
+
+            case "how are you doing":
+            case "how are you":
+            case "how are you feeling":
+                say("I'm very well thank you.", false);
+                break;
+
+            case "whats your name":
+            case "what are you called":
+            case "what shall I call you":
+                say("My name is Alpha, I'm currently running version 1.1 of Neuron. You can see this application at website www.alpha 2 dot uk", true);
+
+            case "what time is it":
+            case "whats the time":
+                int currenthour = c.get(Calendar.HOUR_OF_DAY);
+                int currentminute = c.get(Calendar.MINUTE);
+                if (currentminute < 10) {
+                    say("The current time is " + currenthour + " " + "o" + currentminute, false);
+                } else {
+                    say("The current time is " + currenthour + " " + currentminute, false);
+                }
+                break;
+
+            case "what day is it":
+            case "whats the day":
+                say("Today is a " + android.text.format.DateFormat.format("EEEE, MMMM d", date), false);
+                break;
+
+            case "what year is it":
+            case "whats the year":
+                say("The year is  " + android.text.format.DateFormat.format("yyyy", date), false);
+                break;
+
+            case "what month is it":
+            case "whats the month":
+            case "what month are we in":
+            case "what month is this":
+                say("The month is  " + android.text.format.DateFormat.format("MMMM", date), false);
+                break;
+
+            case "what date is it":
+            case "what date is it today":
+            case "what date is this":
+            case "whats the date":
+            case "whats the date today":
+            case "whats todays date":
+                int currentdate = c.get(Calendar.DATE);
+                say("Today's date is " + android.text.format.DateFormat.format("EEEE, MMMM d, yyyy", date), false);
+                break;
+
+            case "how old are you":
+            case "when were you born":
+            case "whats your birthday":
+            case "whens your birthday":
+            case "what date is your birthday on":
+                say("I was first born on Indiegogo on the 31st December 2015. But I don't really age.", false);
+                break;
+
+            case "whats my location":
+            case "whats your location":
+            case "wheres your location":
+            case "where is your location":
+            case "where are you":
+                String getlocation = getUrl("http://freegeoip.net/json").replace("\"", "");
+                String[] loc = getlocation.split(",");
+                for (int x = 0; x < loc.length; x++) {
+                    if (loc[x].contains("city")) {
+                        City = loc[x].substring(loc[x].lastIndexOf(":") + 1);
+                    }
+                }
+                say("using your i p address I think we are currently located in " + City, true);
+                break;
+
+            case "see you later alligator":
+                say("in a while crocodile", false);
+                break;
+
+            case "knock knock":
+                mRobot.action_PlayActionName("Shake head");
+                say("somebody is at the door,,,, you best go and answer it. Oh, and your not funny so don't try", false);
+                break;
+
+            case "whats your battery level":
+            case "how much battery do you have left":
+            case "How much battery have you got left":
+            case "how much charge do you have":
+            case "how much battery do you have":
+            case "battery level":
+            case "charge left":
+
+                say("I currently have " + batterylevel + " percent left", false);
+                break;
+
+            case "whats your ip address":
+            case "whats your web address":
+            case "ip address":
+                say("My current i p address is " + getIpAddress(), false);
+                break;
+
+
+            default:
+                //say("I'm sorry, I didn't quite catch that?",false);
+                break;
+        }
+
+
+        lastcommand = text;
+        isbusy = false;
+
+        //restack messages if required
+        if (mess.length > 1){
+            for (int x = 1; x < mess.length; x++) {
+               newcom = newcom + mess[x] + "@@";
+            }
+        }
+        if (!newcom.equals("")){
+            command(newcom);
+        }
+    }
+
+
 
     @Override
     public void onServerPlayEnd(boolean isEnd) {
@@ -734,7 +918,7 @@ public class MainActivity extends Activity implements
     @Override
     public void onAlpha2UnderStandTextResult(String arg0) {
         // TODO Auto-generated method stub
-        Log.i("zdy", "nlp result" + arg0);
+        Log.i("zddy", "nlp result" + arg0);
         if (arg0 != null && !arg0.equals("")) {
             int number = new Random().nextInt(10);
             String actionName = String.format("ACT%d", number);
@@ -751,7 +935,6 @@ public class MainActivity extends Activity implements
 
       //      String newText = new String(text);
       //      mRobot.speech_understandText(newText, this);
-
          mHandler.obtainMessage(2, text)
                         .sendToTarget();
             }
@@ -764,7 +947,7 @@ public class MainActivity extends Activity implements
         public void onReceive(Context arg0, Intent intent) {
             // TODO Auto-generated method stub
             if (intent.getAction().equals(DeveloperAppStaticValue.APP_EXIT)) {
-                Log.i("zdy", "speech_stopRecognized ");
+                Log.i("zdddy", "speech_stopRecognized ");
                 mRobot.releaseApi();
                 mRobot = null;
                 System.exit(0);
@@ -787,7 +970,7 @@ public class MainActivity extends Activity implements
                     }
                 } else {
                     if (player.isPlaying()) {
-                        say("turning the radio off",true );
+                        say("turning the sound off",true );
                         player.stop();
                     }
                 }
@@ -974,6 +1157,15 @@ public class MainActivity extends Activity implements
         }
         Log.i("zdy", "onDestroy ");
         mOpenCvCameraView.disableView();
+        if (serverSocket != null) {
+            try {
+                serverSocket.close();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+
 
     }
     public void onCameraViewStarted(int width, int height){
@@ -1028,21 +1220,21 @@ public class MainActivity extends Activity implements
             headx = facesArray[0].x + (facesArray[0].width / 2);
             heady = facesArray[0].y + (facesArray[0].height / 2);
 
-            //headx = headx * 2;
-            //heady = heady * 1.5;
+           // headx = headx * 4;
+           // heady = heady * 3;
 
             short time = 250;
 
             if (headx > 640){ // look left
                 if (headx > 700){headxlast +=1;}
-                if (headx > 800){headxlast +=2;}
-                if (headx > 900){headxlast +=3;}
-                if (headx > 1000){headxlast +=4;}
+                if (headx > 800){headxlast +=1;}
+                if (headx > 900){headxlast +=2;}
+                if (headx > 1000){headxlast +=2;}
             } else {  //look right
                 if (headx < 580){headxlast -=1;}
-                if (headx < 450){headxlast -=2;}
-                if (headx < 350){headxlast -=3;}
-                if (headx < 250){headxlast -=4;}
+                if (headx < 450){headxlast -=1;}
+                if (headx < 350){headxlast -=2;}
+                if (headx < 250){headxlast -=2;}
             }
 
             // I've made Alpha look down slightly to improve voice commands
@@ -1065,7 +1257,7 @@ public class MainActivity extends Activity implements
 
             mRobot.chest_SendOneFreeAngle((byte) 19, (int) headxlast, time);
             mRobot.chest_SendOneFreeAngle((byte) 20, (int) headylast, time);
-            mRobot.action_PlayActionName("eyesblue");
+            //mRobot.action_PlayActionName("eyesblue");
 
             if (!bored){
                 bored = true;
@@ -1167,5 +1359,182 @@ public class MainActivity extends Activity implements
             out.write(buffer, 0, read);
         }
     }
+    private String getIpAddress() {
+        String ip = "";
+        try {
+            Enumeration<NetworkInterface> enumNetworkInterfaces = NetworkInterface
+                    .getNetworkInterfaces();
+            while (enumNetworkInterfaces.hasMoreElements()) {
+                NetworkInterface networkInterface = enumNetworkInterfaces
+                        .nextElement();
+                Enumeration<InetAddress> enumInetAddress = networkInterface
+                        .getInetAddresses();
+                while (enumInetAddress.hasMoreElements()) {
+                    InetAddress inetAddress = enumInetAddress.nextElement();
+
+                    if (inetAddress.isSiteLocalAddress()) {
+                        ip += "SiteLocalAddress: "
+                                + inetAddress.getHostAddress() + "\n";
+                    }
+
+                }
+
+            }
+
+        } catch (SocketException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            ip += "Something Wrong! " + e.toString() + "\n";
+        }
+
+        return ip;
+    }
+
+
+    private class SocketServerThread extends Thread {
+
+        static final int SocketServerPORT = 8080;
+        int count = 0;
+
+        @Override
+        public void run() {
+            try {
+                serverSocket = new ServerSocket(SocketServerPORT);
+                MainActivity.this.runOnUiThread(new Runnable() {
+
+                    @Override
+                    public void run() {
+                       // info.setText("I'm waiting here: "
+                       //         + serverSocket.getLocalPort());
+                    }
+                });
+
+                while (true) {
+                    Socket socket = serverSocket.accept();
+                    count++;
+                    message += "#" + count + " from " + socket.getInetAddress()
+                            + ":" + socket.getPort() + "\n";
+
+                    MainActivity.this.runOnUiThread(new Runnable() {
+
+                        @Override
+                        public void run() {
+                            //msg.setText(message);
+                        }
+                    });
+
+                    SocketServerReplyThread socketServerReplyThread = new SocketServerReplyThread(
+                            socket, count);
+                    socketServerReplyThread.run();
+
+                }
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    public String getUrl(String desiredUrl) {
+
+        BufferedReader reader = null;
+        StringBuilder stringBuilder;
+        stringBuilder = new StringBuilder();
+
+        try {
+
+            url = new URL(desiredUrl); //"http://freegeoip.net/json");
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setReadTimeout(5*1000);
+            conn.connect();
+
+            // read the output from the server
+            reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+
+
+            String line = null;
+            while ((line = reader.readLine()) != null)
+            {
+                stringBuilder.append(line + "\n");
+            }
+            return stringBuilder.toString();
+
+
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+
+        }
+        finally
+        {
+            // close the reader; this can throw an exception too, so
+            // wrap it in another try/catch block.
+            if (reader != null)
+            {
+                try
+                {
+                    reader.close();
+                }
+                catch (IOException ioe)
+                {
+                    ioe.printStackTrace();
+                }
+            }
+        }
+        return stringBuilder.toString();
+    }
+
+
+    private class SocketServerReplyThread extends Thread {
+
+        private Socket hostThreadSocket;
+        int cnt;
+
+        SocketServerReplyThread(Socket socket, int c) {
+            hostThreadSocket = socket;
+            cnt = c;
+        }
+
+        @Override
+        public void run() {
+            OutputStream outputStream;
+            String msgReply = "Hello from Alpha, you are #" + cnt;
+
+            try {
+                outputStream = hostThreadSocket.getOutputStream();
+                PrintStream printStream = new PrintStream(outputStream);
+                printStream.print(msgReply);
+                printStream.close();
+
+                //message += "replayed: " + msgReply + "\n";
+
+                MainActivity.this.runOnUiThread(new Runnable() {
+
+                    @Override
+                    public void run() {
+                       // msg.setText(message);
+                    }
+                });
+
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+                message += "Something wrong! " + e.toString() + "\n";
+            }
+
+            MainActivity.this.runOnUiThread(new Runnable() {
+
+                @Override
+                public void run() {
+                    //msg.setText(message);
+                }
+            });
+        }
+
+    }
+
 
 }
