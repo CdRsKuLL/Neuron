@@ -27,6 +27,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
+import android.util.Xml;
 import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.WindowManager;
@@ -49,9 +50,15 @@ import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.objdetect.CascadeClassifier;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlPullParserFactory;
+import org.xmlpull.v1.XmlSerializer;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -60,6 +67,8 @@ import java.io.OutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.ServerSocket;
@@ -132,6 +141,11 @@ public class MainActivity extends Activity implements
     private ArrayList<String> mAlphaActionList = new ArrayList<String>();
     private ArrayList<String> mAlphaDanceList = new ArrayList<String>();
     private ArrayList<String> mAlphaStoryList = new ArrayList<String>();
+
+    ArrayList<String> radio = new ArrayList<String>();
+    ArrayList<String> music = new ArrayList<String>();
+    ArrayList<String> joke = new ArrayList<String>();
+
 
     URL url;
     HttpURLConnection conn;
@@ -212,17 +226,16 @@ public class MainActivity extends Activity implements
                         e.printStackTrace();
                         Log.i(TAG, "Failed to load cascade. Exception thrown: " + e);
                     }
-
+                    mOpenCvCameraView.enableFpsMeter();
                     //public static final int CAMERA_ID_BACK  = 99;
                     //public static final int CAMERA_ID_FRONT = 98;
                     //mOpenCvCameraView.setCameraIndex(98);
                     //mOpenCvCameraView.setCameraIndex(1);
                     //mOpenCvCameraView.enableFpsMeter();
-                    //mOpenCvCameraView.setMaxFrameSize(320,240);
-                    mOpenCvCameraView.enableView();
+                    mOpenCvCameraView.setMaxFrameSize(320,240);
                     headtracking = true;
                     setDetectorType(0);
-
+                    mOpenCvCameraView.enableView();
                 }
                 break;
                 default: {
@@ -316,6 +329,16 @@ public class MainActivity extends Activity implements
         Thread socketServerThread = new Thread(new SocketServerThread());
         socketServerThread.start();
 
+        CopyAssets();
+        try {
+            LoadXML();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (XmlPullParserException e) {
+            e.printStackTrace();
+        }
+
+
     }
 
     private BroadcastReceiver batteryInfoReceiver = new BroadcastReceiver() {
@@ -387,7 +410,7 @@ public class MainActivity extends Activity implements
         } else {
             say("good evening, powering up", false);
         }
-        CopyAssets();
+
 
     }
 
@@ -504,49 +527,13 @@ public class MainActivity extends Activity implements
             if (text.contains("another") || text.contains("more")) {
                 say("okay, another joke coming up.", true);
             }
-            int joke = new Random().nextInt(13);
-            switch (joke) {
-                case 0:
-                    say("How do astronomers organize a party?                 They planet.", false);
-                    break;
-                case 1:
-                    say("What type of sandals do frogs wear?                 Open-toad!", false);
-                    break;
-                case 2:
-                    say("Where do bees go to the toilet?                 at the BP station.", false);
-                    break;
-                case 3:
-                    say("What do you call a paralyzed goat?                 Billy Idle.", false);
-                    break;
-                case 4:
-                    say("I have a phobia of over engineered buildings. I have a complex complex complex.", false);
-                    break;
-                case 5:
-                    say("How do you make a tissue dance?                 Put a little boogie in it.", false);
-                    break;
-                case 6:
-                    say("Why did A dell cross the road?                      To sing    Hello from the other side.", true);
-                    break;
-                case 7:
-                    say("Why couldn't the leopard play hide and seek?                Because he was always spotted.", false);
-                    break;
-                case 8:
-                    say("A robot walks into a bar, orders a drink, and lays down some cash.                 Bartender says, Hey, we don't serve robots. And the robot says, Oh, but someday you will..", false);
-                    break;
-                case 9:
-                    say("How many robots does it take to screw in a light bulb?                 Three,,, one to hold the bulb, and two to turn the ladder!.", false);
-                    break;
-                case 10:
-                    say("How does a robot shave ?                 With a laser blade !", false);
-                    break;
-                case 11:
-                    say("What do you call a robot that always takes the longest route round ?                 R 2 detour.", false);
-                    break;
-                case 12:
-                    say("Do robots have sisters ?                 No, just transistors.", false);
-                    break;
+            int jokenumber = new Random().nextInt(joke.size());
+            String [] newjoke = joke.get(jokenumber).toString().split("@@");
 
+            for (int x = 0; x < newjoke.length; x++) {
+               say(newjoke[x],true);
             }
+
         }
 
         if (text.contains("thank") || text.contains("thanks")) {
@@ -565,10 +552,24 @@ public class MainActivity extends Activity implements
             }
         }
 
+        if (text.contains("who is")){
+            String totaltext = text.trim();
+            totaltext = totaltext.replace(" ","%20");
+            String res = getUrl("https://en.wikipedia.org/w/api.php?action=query&prop=extracts&exintro&titles=" + totaltext + "&format=jsonfm");
+
+        }
+
         if (text.contains("weather")) {
             Latitude = "";
             Latitude = "";
-
+            String place = "";
+            String getWeather = "";
+            text = text.replace("today","");
+            if (text.contains((" in "))){
+                place = text.substring(text.lastIndexOf(" in ") + 3);
+                place = place.trim();
+                place = place.replace(" ","%20");
+            }
             String Currentcondition = "";
             String getlocation = getUrl("http://freegeoip.net/json").replace("\"", "");
             String[] loc = getlocation.split(",");
@@ -583,7 +584,13 @@ public class MainActivity extends Activity implements
                     City = loc[x].substring(loc[x].lastIndexOf(":") + 1);
                 }
             }  //28064815bbbd7c158a58330087a9d152
-            String getWeather = getUrl("http://api.openweathermap.org/data/2.5/weather?lat=" + Latitude + "&lon=" + Longitude + "&units=metric&APPID=28064815bbbd7c158a58330087a9d152");
+            if (place.equals("")){
+                getWeather = getUrl("http://api.openweathermap.org/data/2.5/weather?lat=" + Latitude + "&lon=" + Longitude + "&units=metric&APPID=28064815bbbd7c158a58330087a9d152");
+
+            } else {
+                getWeather = getUrl("http://api.openweathermap.org/data/2.5/weather?q=" + place + "&units=metric&APPID=28064815bbbd7c158a58330087a9d152");
+                City = place;
+            }
             getWeather = getWeather.replace("{","");
             getWeather = getWeather.replace("}","");
             String[] wea = getWeather.split(",");
@@ -652,26 +659,15 @@ public class MainActivity extends Activity implements
         }
 
         if (text.contains("radio")) {
-            if (text.contains("one") || text.contains("wall")) {
-                say("playing radio one", false);
-                initializeMediaPlayer("http://bbcmedia.ic.llnwd.net/stream/bbcmedia_radio1_mf_p");
+
+            for (int x = 0; x < radio.size(); x++) {
+                String [] trig = radio.get(x).toString().split("@@");
+               if (text.contains(trig[0])){
+                   say("playing radio " + trig[1], false);
+                   initializeMediaPlayer(trig[2]);
+               }
             }
-            if (text.contains("two")) {
-                say("playing radio two", false);
-                initializeMediaPlayer("http://bbcmedia.ic.llnwd.net/stream/bbcmedia_radio2_mf_p");
-            }
-            if (text.contains("classical")) {
-                say("playing radio classical", false);
-                initializeMediaPlayer("http://media-the.musicradio.com:80/ClassicFMMP3");
-            }
-            if (text.contains("103")) {
-                say("playing key 1 o 3", false);
-                initializeMediaPlayer("http://icy-e-bl-07-boh.sharp-stream.com:8000/key.mp3");
-            }
-            if (text.contains(" x")) {
-                say("playing radio x", false);
-                initializeMediaPlayer("http://media-the.musicradio.com:80/RadioXManchester");
-            }
+
             if (text.contains("off") || text.contains("stop") || text.contains("quiet")) {
                 if (player.isPlaying()) {
                     say("turning the radio off", false);
@@ -683,37 +679,30 @@ public class MainActivity extends Activity implements
         }
 
         if (text.contains("music")) {
-            if (text.contains("like") || text.contains("love") || text.contains("enjoy") || text.contains("taste") || text.contains("hate")) {
-                say("I like all sorts of music, but I really enjoy trance", true);
+            for (int x = 0; x < music.size(); x++) {
+                String [] trig = music.get(x).toString().split("@@");
+                if (text.contains(trig[0])){
+                    say("playing some " + trig[1] + " music", true);
+                    if (trig[2].equals("jazz")){
+                        say("nice",false);
+                    }
+                    initializeMediaPlayer(trig[2]);
+                }
             }
-            if (text.contains("christmas")) {
-                say("playing some christmas music", true);
-                initializeMediaPlayer("http://uk5.internet-radio.com:8278/live");
-            }
-            if (text.contains("dance")) {
-                say("playing some dance music", true);
-                initializeMediaPlayer("http://stream.nonstopplay.co.uk/nsp-128k-mp3");
-            }
-            if (text.contains("classical")) {
-                say("playing some classical music", true);
-                initializeMediaPlayer("http://109.123.116.202:8020/stream");
-            }
-            if (text.contains("rnb") || text.contains("hip-hop")) {
-                say("playing some rnb and hip hop music", true);
-                initializeMediaPlayer("http://uk4.internet-radio.com:10104/live");
-            }
-            if (text.contains("jazz")) {
-                say("playing some jazz music....... nice", true);
-                initializeMediaPlayer("http://tx.sharp-stream.com/icecast.php?i=jazzfmmobile.mp3");
-            }
+
             if (text.contains("off") || text.contains("stop") || text.contains("quiet")) {
                 if (player.isPlaying()) {
                     say("turning the music off", false);
                     player.stop();
                 } else {
-                    say("sorry, I'm not playing any music", true);
+                    say("sorry, the music isn't playing", true);
                 }
             }
+
+            if (text.contains("like") || text.contains("love") || text.contains("enjoy") || text.contains("taste") || text.contains("hate")) {
+                say("I like all sorts of music, but I really enjoy trance", true);
+            }
+
         }
 
         Calendar c = Calendar.getInstance();
@@ -853,6 +842,7 @@ public class MainActivity extends Activity implements
         isbusy = false;
 
         //restack messages if required
+        newcom = "";
         if (mess.length > 1){
             for (int x = 1; x < mess.length; x++) {
                newcom = newcom + mess[x] + "@@";
@@ -1220,8 +1210,8 @@ public class MainActivity extends Activity implements
             headx = facesArray[0].x + (facesArray[0].width / 2);
             heady = facesArray[0].y + (facesArray[0].height / 2);
 
-           // headx = headx * 4;
-           // heady = heady * 3;
+            headx = headx * 4;
+            heady = heady * 3;
 
             short time = 250;
 
@@ -1326,16 +1316,43 @@ public class MainActivity extends Activity implements
     private void CopyAssets() {
         AssetManager assetManager = getAssets();
         String[] files = null;
+        InputStream in = null;
+        OutputStream out = null;
+
         try {
             files = assetManager.list("actions");
         } catch (IOException e) {
             Log.e("tag", e.getMessage());
         }
 
+        String ExternalStorageDirectoryPath = Environment
+                .getExternalStorageDirectory().getAbsolutePath();
+
+        File file = new File(ExternalStorageDirectoryPath
+                + "/Neuron/Neuron.xml");
+
+        if (!file.exists()) {
+            Log.d("XML", "Not found - Trying to save");
+            try {
+               File directory = new File(Environment.getExternalStorageDirectory().toString() +"/Neuron/");
+               directory.mkdirs();
+                in = assetManager.open("xml/Neutron.xml");
+                out = new FileOutputStream(Environment.getExternalStorageDirectory().toString() +"/Neuron/Neuron.xml");
+                copyFile(in, out);
+                in.close();
+                in = null;
+                out.flush();
+                out.close();
+                out = null;
+            } catch(Exception e) {
+                Log.e("tag", e.getMessage());
+            }
+        }
+
+
         for(String filename : files) {
             System.out.println("File name => "+filename);
-            InputStream in = null;
-            OutputStream out = null;
+
             try {
                 //File directory = new File(Environment.getExternalStorageDirectory().toString() +"/actions/neuron/");
                 //directory.mkdirs();
@@ -1373,8 +1390,7 @@ public class MainActivity extends Activity implements
                     InetAddress inetAddress = enumInetAddress.nextElement();
 
                     if (inetAddress.isSiteLocalAddress()) {
-                        ip += "SiteLocalAddress: "
-                                + inetAddress.getHostAddress() + "\n";
+                        ip += inetAddress.getHostAddress() + "\n";
                     }
 
                 }
@@ -1535,6 +1551,128 @@ public class MainActivity extends Activity implements
         }
 
     }
+    private void SaveXML() throws IOException {
+        String ExternalStorageDirectoryPath = Environment
+                .getExternalStorageDirectory().getAbsolutePath();
 
+        String targetPath = ExternalStorageDirectoryPath
+                + "/Neuron/";
+
+        File dir = new File(targetPath);
+
+        if (!dir.isDirectory()) {
+            dir.mkdirs();
+        }
+        File file = new File(ExternalStorageDirectoryPath
+                + "/Neuron/Neuron.xml");
+
+        FileOutputStream fileos;
+        fileos = new FileOutputStream(file);
+        XmlSerializer xmlSerializer = Xml.newSerializer();
+        StringWriter writer = new StringWriter();
+        xmlSerializer.setFeature("http://xmlpull.org/v1/doc/features.html#indent-output", true);
+        xmlSerializer.setOutput(writer);
+        xmlSerializer.startDocument("UTF-8", true);
+        xmlSerializer.startTag(null, "userData");
+        xmlSerializer.startTag(null, "IPLastLocation");
+        xmlSerializer.text("IP Location here");
+        xmlSerializer.endTag(null, "IPLastLocation");
+        xmlSerializer.startTag(null, "CurrentLocation");
+        xmlSerializer.text("Current location here");
+        xmlSerializer.endTag(null, "CurrentLocation");
+
+        for (int x = 0; x < radio.size(); x++) {
+            xmlSerializer.startTag(null, "RadioStations");
+            xmlSerializer.text(radio.get(x));
+            xmlSerializer.endTag(null, "RadioStations");
+        }
+
+        for (int x = 0; x < music.size(); x++) {
+            xmlSerializer.startTag(null, "MusicStations");
+            xmlSerializer.text(joke.get(x));
+            xmlSerializer.endTag(null, "MusicStations");
+        }
+
+        for (int x = 0; x < joke.size(); x++) {
+            xmlSerializer.startTag(null, "Jokes");
+            xmlSerializer.text(music.get(x));
+            xmlSerializer.endTag(null, "Jokes");
+        }
+
+        xmlSerializer.endTag(null, "userData");
+        xmlSerializer.endDocument();
+        xmlSerializer.flush();
+        String dataWrite = writer.toString();
+        fileos.write(dataWrite.getBytes());
+        fileos.close();
+    }
+
+    private void LoadXML() throws IOException, XmlPullParserException {
+
+        //SaveXML();
+
+        String ExternalStorageDirectoryPath = Environment
+                .getExternalStorageDirectory().getAbsolutePath();
+
+        File file = new File(ExternalStorageDirectoryPath
+                + "/Neuron/Neuron.xml");
+
+        if (!file.exists()) {
+            Log.d("XML", "Not found - Trying to save");
+            try {
+                SaveXML();
+            } catch (Throwable e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+
+        String data = null;
+        String xmlinfo = "";
+        ArrayList<String> userData = new ArrayList<String>();
+
+        FileInputStream fis = new FileInputStream(file);
+        InputStreamReader isr = new InputStreamReader(fis);
+        char[] inputBuffer = new char[fis.available()];
+        isr.read(inputBuffer);
+        data = new String(inputBuffer);
+        isr.close();
+        fis.close();
+
+        XmlPullParserFactory factory = null;
+        factory = XmlPullParserFactory.newInstance();
+
+        factory.setNamespaceAware(true);
+        XmlPullParser xpp = null;
+        xpp = factory.newPullParser();
+        xpp.setInput(new StringReader(data));
+
+        int eventType = 0;
+        eventType = xpp.getEventType();
+
+        while (eventType != XmlPullParser.END_DOCUMENT)  {
+            String name=xpp.getName();
+            switch (eventType){
+                case XmlPullParser.START_TAG:
+                    break;
+                case XmlPullParser.TEXT:
+                    xmlinfo = xpp.getText();
+                    break;
+
+                case XmlPullParser.END_TAG:
+                    if (name.equals("RadioStations")){
+                        radio.add(xmlinfo);
+                    }
+                    if (name.equals("MusicStations")){
+                        music.add(xmlinfo);
+                    }
+                    if (name.equals("Jokes")){
+                        joke.add(xmlinfo);
+                    }
+                    break;
+            }
+            eventType = xpp.next();
+        }
+    }
 
 }
